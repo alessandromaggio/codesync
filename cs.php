@@ -4,6 +4,7 @@ namespace codesync;
 class CS
 {
     const VER = "v2";
+    const ROOT = "/";
     
     private static function getVersionList()
     {
@@ -37,6 +38,11 @@ class CS
         {
             self::VER;
         }
+    }
+    
+    public static function getRoot()
+    {
+        return (self::ROOT == "/") ? __DIR__ : ROOT;
     }
 }
 ?>

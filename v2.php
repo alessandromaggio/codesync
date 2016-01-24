@@ -3,6 +3,8 @@
      * CodeSync processor - v2
      */
 
+    require_once __DIR__ . "/cs.php";
+
     class CodeSync
     {
         const 
@@ -118,17 +120,54 @@
         
         protected function getFolder()
         {
-            
+            $o => $this->scanDir(CS::getRoot() . '/' . $this->data['device'] . '/' . $this->data['object']);
         }
         
         protected function getFile()
         {
-            
         }
         
         protected function scanDir($dir)
         {
+            $c = scandir($dir);
+            $out = array();
+            foreach($c as $k => $v)
+            {
+                $el = array();
+                $path = $dir .'/' . $v;
+                if($v == '.' || $v == '..')
+                {
+                    continue;
+                }
+                
+                if( is_dir($path) )
+                {
+                    $el[] = date("r", filemtime($path));
+                    $el[] = $path;
+                    
+                    $out[] = array(
+                            'type' => self::type_FOLDER,
+                            'content' => $el
+                        );
+                    
+                    foreach($this->scanDir($path) as $r)
+                    {
+                        $out[] = $r;
+                    }
+                }
+                else
+                {
+                    $el[] = date("r", filemtime($path));
+                    $el[] = $path;
+                    
+                    $out[] = array(
+                            'type' => self::type_FILE,
+                            'content' => $el
+                        );
+                }
+            }
             
+            return $out;
         }
     }
 ?>
