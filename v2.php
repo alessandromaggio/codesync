@@ -3,6 +3,8 @@
      * CodeSync processor - v2
      */
 
+    namespace codesync;
+
     require_once __DIR__ . "/cs.php";
 
     class CodeSync
@@ -13,6 +15,10 @@
             type_PROJECT = 3,
             type_FOLDER = 4,
             type_FILE = 5;
+        
+        const
+            header_CAN_DOWNLOAD = 1,
+            header_MUST_READ = 2;
         
         private $data = array(
                 'version' => null,
@@ -27,13 +33,67 @@
         {
             foreach($qry as $k => $v)
             {
-                $this->data[$k] => $v;
+                $this->data[$k] = $v;
             }
         }
         
         public function execute()
         {
+            $out = array();
+            $out[] = $this->getResponder();
+            $out[] = $this->getResponseVersion();
+            $out[] = null;
             
+            if($this->data['subject'] == 'file')
+            {
+                $this->setHeader(self::header_CAN_DOWNLOAD);
+               
+                echo $this->getWhatAsked();
+            }
+            else
+            {
+                $this->setHeader(self::header_MUST_READ);
+                foreach($this->getWhatAsked() as $r)
+                {
+                    $out[] = $r;
+                }
+                foreach($out as $line)
+                {
+                    echo $this->lineNormalizer($line);
+                }
+            }
+        }
+        
+        protected function browserIsCodeSyncClient()
+        {
+            switch($_SERVER['HTTP_USER_AGENT'])
+            {
+                case "CS-Client 2.0":
+                    return true;
+                    break;
+            }
+            
+            return false;
+        }
+        
+        protected function setHeader($purpose)
+        {
+            switch($purpose)
+            {
+                case self::header_CAN_DOWNLOAD:
+                    if($this->browserIsCodeSyncClient())
+                    {
+                        header('Content-Type: application/octet-stream');
+                    }
+                    else
+                    {
+                         header("Content-Type: text/plain");
+                    }
+                    break;
+                case self::header_MUST_READ:
+                    header("Content-Type: text/plain");
+                    break;
+            }
         }
         
         protected function lineNormalizer($lnobj)
@@ -86,7 +146,7 @@
         protected function getResponseVersion()
         {
             return array(
-                'type' => self::type_SYSTEM,
+                'type' => self::type_VERSION,
                 'content' => array(
                     $this->data['version']
                 )
@@ -115,16 +175,32 @@
         
         protected function getProject()
         {
-            
+            return $this->getFolder();
         }
         
         protected function getFolder()
         {
-            $o => $this->scanDir(CS::getRoot() . '/' . $this->data['device'] . '/' . $this->data['object']);
+            return $this->scanDir($this->getInputAsPath());
         }
         
         protected function getFile()
         {
+            $fh = fopen($this->getInputAsPath(), "r");
+            $fbytes = fread($fh, filesize($this->getInputAsPath()));
+            fclose($fh);
+            return $fbytes;
+        }
+        
+        protected function getInputAsPath()
+        {
+            return CS::getRoot() . '/' . $this->data['device'] . '/' . $this->data['object'];
+        }
+        
+        protected function remoteAccessiblePath($path, $type)
+        {
+            return str_replace(CS::getRoot() . '/' . $this->data['device'], 
+                               'http://' . $_SERVER['HTTP_HOST'] . '/' . $this->data['version'] . '/device:' . $this->data['device'] . '/pull/' . $type, 
+                               $path);
         }
         
         protected function scanDir($dir)
@@ -143,7 +219,7 @@
                 if( is_dir($path) )
                 {
                     $el[] = date("r", filemtime($path));
-                    $el[] = $path;
+                    $el[] = $this->remoteAccessiblePath($path, 'folder');
                     
                     $out[] = array(
                             'type' => self::type_FOLDER,
@@ -158,7 +234,7 @@
                 else
                 {
                     $el[] = date("r", filemtime($path));
-                    $el[] = $path;
+                    $el[] = $this->remoteAccessiblePath($path, 'file');
                     
                     $out[] = array(
                             'type' => self::type_FILE,
