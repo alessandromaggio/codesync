@@ -20,6 +20,7 @@ CodeSync is not an alternative to file hosting services such as Google Drive or 
 In order to have your devices automatically synchronizing your files you will need to install two things: the codesync server on the device where you plan to write the code onto (such as your computer); and the codesync client on all devices that will rune the code. Then you will need to configure each client with a device name and specifiy on the server where are the files to be synchronized. That's basically all.
 #### Server setup
 In order to install the server you will need to install a webserver first. Apache is widely used and it is available for many differnet operating systems. Once done that, you will have to put all codesync files in its root folder.
+
 1. Install apache (https://httpd.apache.org/) OR if you are under Windows and you want something simpler, then I'd suggest you XAMPP (https://www.apachefriends.org)
 2. Once the webserver is installed, find the root folder (for example C:/xampp/htdocs) and everything in it, then put there all the files contained in the "server" folder of CodeSync
 3. Test CodeSync by visiting the webpage http://localhost/
