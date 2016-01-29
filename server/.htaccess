@@ -2,4 +2,5 @@ Options +FollowSymLinks
 RewriteEngine On
 
 
+RewriteRule ^$ index.php
 RewriteRule ^([a-zA-Z0-9-_,]+)/device:([a-zA-Z0-9-_,]+)/([a-zA-Z0-9-_,]+)/([a-zA-Z0-9-_,]+)/(.*)$ index.php?ver=$1&dev=$2&op=$3&sub=$4&obj=$5

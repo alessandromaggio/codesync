@@ -11,6 +11,22 @@
         'obj' => null
     );
 
+    if(!isset($_REQUEST) || count($_REQUEST) == 0)
+    {
+        header("Content-Type: text/plain");
+        echo "CodeSync server is currently working. This server supports the following versions:\n";
+        
+        foreach(scandir(__DIR__) as $k => $v )
+        {
+            $m = array();
+            if(preg_match("/v(.+).php/", $v, $m))
+            {
+                echo " - Version {$m[1]} \n";
+            }
+        }
+        exit;
+    }
+
     foreach($_REQUEST as $ind =>$req)
     {
         $inp[$ind] = $req;
