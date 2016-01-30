@@ -10,6 +10,7 @@
     class CodeSync
     {
         const 
+            type_ERROR = -1,
             type_SYSTEM = 1,
             type_VERSION = 2,
             type_PROJECT = 3,
@@ -122,6 +123,8 @@
                 case self::type_FILE:
                     $output = "F\t";
                     break;
+                case self::type_ERROR;
+                    $output = "E\t";
                 default: break;
             }
             
@@ -185,10 +188,17 @@
         
         protected function getFile()
         {
-            $fh = fopen($this->getInputAsPath(), "r");
-            $fbytes = fread($fh, filesize($this->getInputAsPath()));
-            fclose($fh);
-            return $fbytes;
+            if(file_exists($this->getInputAsPath()))
+            {
+                $fh = fopen($this->getInputAsPath(), "r");
+                $fbytes = fread($fh, filesize($this->getInputAsPath()));
+                fclose($fh);
+                return $fbytes;
+            }
+            else
+            {
+                return null;
+            }
         }
         
         protected function getInputAsPath()
@@ -205,6 +215,19 @@
         
         protected function scanDir($dir)
         {
+            if(!file_exists($dir))
+            {
+                return array(
+                        array(
+                            'type' => self::type_ERROR,
+                            'content' => array(
+                                    '101',
+                                    "Directory '$dir' does not exists'."
+                                )
+                        )
+                    );
+            }
+            
             $c = scandir($dir);
             $out = array();
             foreach($c as $k => $v)
