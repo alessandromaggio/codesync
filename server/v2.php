@@ -234,23 +234,12 @@
         
         protected function pushFolder()
         {
-            $arr = explode("/", $this->getInputAsPath());
-            $path = "";
-            foreach($arr as $k => $v)
-            {
-                $path .= "/$v";
-                if(!file_exists($path))
-                {
-                    mkdir($path);
-                }
-            }
-            
-            return null();
+            return mkdir($this->getInputAsPath(), 0700, true);
         }
         
         protected function pushFile()
         {
-            if(move_uploaded_file($this->['files']["file"]["tmp_name"], $this->getInputAsPath()))
+            if(move_uploaded_file($this->data['files']["file"]["tmp_name"], $this->getInputAsPath()))
             {
                 return true;
             }
