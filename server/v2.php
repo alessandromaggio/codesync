@@ -45,6 +45,12 @@
             $out[] = $this->getResponseVersion();
             $out[] = null;
             
+            if($this->data['operation'] == "push")
+            {
+                echo $this->pushWhatAsked();
+                return;
+            }
+            
             if($this->data['subject'] == 'file')
             {
                 $this->setHeader(self::header_CAN_DOWNLOAD);
@@ -176,6 +182,26 @@
             return null;
         }
         
+        protected function pushWhatAsked()
+        {
+            switch($this->data['subject'])
+            {
+                case 'project':
+                    return $this->pushProject();
+                    break;
+                case 'folder':
+                    return $this->pushFolder();
+                    break;
+                case 'file':
+                    return $this->pushFile();
+                    break;
+                case null:
+                    break;
+            }
+            
+            return null;
+        }
+        
         protected function getProject()
         {
             return $this->getFolder();
@@ -201,9 +227,52 @@
             }
         }
         
+        protected function pushProject()
+        {
+            return $this->pushFolder();
+        }
+        
+        protected function pushFolder()
+        {
+            $arr = explode("/", $this->getInputAsPath());
+            $path = "";
+            foreach($arr as $k => $v)
+            {
+                $path .= "/$v";
+                if(!file_exists($path))
+                {
+                    mkdir($path);
+                }
+            }
+            
+            return null();
+        }
+        
+        protected function pushFile()
+        {
+            if(move_uploaded_file($this->['files']["file"]["tmp_name"], $this->getInputAsPath()))
+            {
+                return true;
+            }
+            return false;
+        }
+        
         protected function getInputAsPath()
         {
             return CS::getRoot() . '/' . $this->data['device'] . '/' . $this->data['object'];
+        }
+        
+        protected function getTargetFather()
+        {
+            $arr = explode("/", $this->getInputAsPath());
+            array_pop($arr);
+            return implode("/", $arr);
+        }
+        
+        protected function getTargetElement()
+        {
+            $arr = explode("/", $this->getInputAsPath());
+            return array_pop($arr);
         }
         
         protected function remoteAccessiblePath($path, $type)

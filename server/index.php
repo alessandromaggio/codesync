@@ -8,7 +8,8 @@
         'dev' => null,
         'op' => null,
         'sub' => null,
-        'obj' => null
+        'obj' => null,
+        'files' => null
     );
 
     if(!isset($_REQUEST) || count($_REQUEST) == 0)
@@ -30,6 +31,11 @@
     foreach($_REQUEST as $ind =>$req)
     {
         $inp[$ind] = $req;
+    }
+
+    if(isset($_FILES))
+    {
+        $inp['files'] = $_FILES;
     }
 
     $ver = CS::getCompatibilityVersion($inp['ver']);
