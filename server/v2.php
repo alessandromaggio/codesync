@@ -21,6 +21,9 @@
             header_CAN_DOWNLOAD = 1,
             header_MUST_READ = 2;
         
+        const
+            DATEFORMAT = 'Y-m-d  H:i:s';
+        
         private $data = array(
                 'version' => null,
                 'device' => null,
@@ -73,14 +76,16 @@
         
         protected function browserIsCodeSyncClient()
         {
+            /*
             switch($_SERVER['HTTP_USER_AGENT'])
             {
                 case "CS-Client 2.0":
                     return true;
                     break;
             }
+            */
             
-            return false;
+            return true;
         }
         
         protected function setHeader($purpose)
@@ -94,7 +99,7 @@
                     }
                     else
                     {
-                         header("Content-Type: text/plain");
+                         header("Content-Type: application/octet-stream'");
                     }
                     break;
                 case self::header_MUST_READ:
@@ -216,10 +221,16 @@
         {
             if(file_exists($this->getInputAsPath()))
             {
-                $fh = fopen($this->getInputAsPath(), "r");
-                $fbytes = fread($fh, filesize($this->getInputAsPath()));
-                fclose($fh);
-                return $fbytes;
+                if(filesize($this->getInputAsPath()) > 0) {
+                    $fh = fopen($this->getInputAsPath(), "r");
+                    $fbytes = fread($fh, filesize($this->getInputAsPath()));
+                    fclose($fh);
+                    return $fbytes;
+                }
+                else {
+                    return '';
+                }
+                
             }
             else
             {
@@ -234,16 +245,20 @@
         
         protected function pushFolder()
         {
-            return mkdir($this->getInputAsPath(), 0700, true);
+            if(file_exists($this->getInputAsPath()) || @mkdir($this->getInputAsPath(), 0700, true)) {
+                return "PUSH-SUCCESSFUL";
+            }
+
+            return "Server could not create the folder";
         }
         
         protected function pushFile()
         {
-            if(move_uploaded_file($this->data['files']["file"]["tmp_name"], $this->getInputAsPath()))
+            if(@move_uploaded_file($_FILES["file"]["tmp_name"], $this->getInputAsPath()))
             {
-                return true;
+                return "PUSH-SUCCESSFUL: moved file from {$_FILES["file"]["tmp_name"]} to {$this->getInputAsPath()}";
             }
-            return false;
+            return "Undefined error with file upload" . '\r\n' . implode('\r\n', $_FILES);
         }
         
         protected function getInputAsPath()
@@ -299,7 +314,7 @@
                 
                 if( is_dir($path) )
                 {
-                    $el[] = date("r", filemtime($path));
+                    $el[] = date(self::DATEFORMAT, filemtime($path));
                     $el[] = $this->remoteAccessiblePath($path, 'folder');
                     
                     $out[] = array(
@@ -314,7 +329,7 @@
                 }
                 else
                 {
-                    $el[] = date("r", filemtime($path));
+                    $el[] = date(self::DATEFORMAT, filemtime($path));
                     $el[] = $this->remoteAccessiblePath($path, 'file');
                     
                     $out[] = array(
